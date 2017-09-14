@@ -1,17 +1,90 @@
-// Lab1MainProject.cpp : Defines the entry point for the application.
-//
-
 #include "stdafx.h"
 #include "Lab1MainProject.h"
 
 #define MAX_LOADSTRING 100
 
-// Global Variables:
-HINSTANCE hInst;                                // current instance
-WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
-WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+HINSTANCE hInst;
+WCHAR szTitle[MAX_LOADSTRING];
+WCHAR szWindowClass[MAX_LOADSTRING];
 
-// Forward declarations of functions included in this code module:
+class Ellipce
+{
+	public:
+		int x1, y1, x2, y2;
+		bool toRight = false, toLeft = false, toDown = false, toUp = false;
+
+	Ellipce(int x1 = 0, int y1 = 0, int x2 = 0, int y2 = 0)
+	{
+		this->x1 = x1;
+		this->y1 = y1;
+		this->x2 = x2;
+		this->y2 = y2;
+	}
+
+	public:
+		void Draw()
+		{
+			if (this->toRight)
+			{
+				this->MoveRight();
+			}
+			if (this->toLeft)
+			{
+				this->MoveLeft();
+			}
+			if (this->toDown)
+			{
+				this->MoveDown();
+			}
+			if (this->toUp)
+			{
+				this->MoveUp();
+			}
+		}
+		
+		void Stop()
+		{
+			this->toDown = false;
+			this->toUp = false;
+			this->toRight = false;
+			this->toLeft = false;
+		}
+
+	private: 
+		void MoveLeft()
+		{
+			this->x1--;
+			this->x2--;
+		}
+
+		void MoveRight()
+		{
+			this->x1++;
+			this->x2++;
+		}
+
+		void MoveDown()
+		{
+			this->y1++;
+			this->y2++;
+		}
+
+		void MoveUp()
+		{
+			this->y1--;
+			this->y2--;
+		}
+};
+
+Ellipce *ellipce = new Ellipce(0, 0, 100, 100);
+
+bool isMoveEllipce = false;
+UINT_PTR timer;
+const int TIMER_KEY_RIGHT = 0, TIMER_KEY_LEFT = 1, TIMER_KEY_UP = 2, TIMER_KEY_DOWN = 3;
+const int TIMER_WHEEL_UP = 4, TIMER_WHEEL_DOWN = 5;
+const int DRAW_TIMER = INT_MAX;
+const int TIMER_INTERVAL = 10;
+
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -26,13 +99,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: Place code here.
+	
 
-    // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_LAB1MAINPROJECT, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
-    // Perform application initialization:
     if (!InitInstance (hInstance, nCmdShow))
     {
         return FALSE;
@@ -42,7 +114,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 
-    // Main message loop:
     while (GetMessage(&msg, nullptr, 0, 0))
     {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -55,20 +126,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     return (int) msg.wParam;
 }
 
-
-
-//
-//  FUNCTION: MyRegisterClass()
-//
-//  PURPOSE: Registers the window class.
-//
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex;
 
     wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
+    wcex.style          = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wcex.lpfnWndProc    = WndProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
@@ -83,19 +147,9 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
-//
-//   FUNCTION: InitInstance(HINSTANCE, int)
-//
-//   PURPOSE: Saves instance handle and creates main window
-//
-//   COMMENTS:
-//
-//        In this function, we save the instance handle in a global variable and
-//        create and display the main program window.
-//
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   hInst = hInstance; // Store instance handle in our global variable
+   hInst = hInstance;
 
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
@@ -107,20 +161,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
+   SetTimer(hWnd, DRAW_TIMER, TIMER_INTERVAL, (TIMERPROC)NULL);
 
    return TRUE;
 }
 
-//
-//  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  PURPOSE:  Processes messages for the main window.
-//
-//  WM_COMMAND  - process the application menu
-//  WM_PAINT    - Paint the main window
-//  WM_DESTROY  - post a quit message and return
-//
-//
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -128,7 +173,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
-            // Parse the menu selections:
             switch (wmId)
             {
             case IDM_ABOUT:
@@ -146,10 +190,111 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code that uses hdc here...
+			Ellipse(hdc, ellipce->x1, ellipce->y1, ellipce->x2, ellipce->y2);
             EndPaint(hWnd, &ps);
         }
         break;
+	case WM_LBUTTONDOWN:
+		{
+
+		}
+		break;
+	case WM_LBUTTONUP:
+		{
+
+		}
+		break;
+	case WM_KEYDOWN:
+		
+		switch (wParam)
+		{
+		case VK_RIGHT:
+			{
+			ellipce->toRight = true;
+			}
+			break;
+		case VK_LEFT:
+			{
+			ellipce->toLeft = true;
+			}
+			break;
+		case VK_DOWN:
+			{
+			ellipce->toDown = true;
+			}
+			break;
+		case VK_UP:
+			{
+			ellipce->toUp = true;
+			}
+			break;
+		}
+		break;
+	case WM_KEYUP:
+		{
+			switch (wParam)
+			{
+			case VK_RIGHT:
+				{
+				ellipce->toRight = false;
+				}
+				break;
+			case VK_LEFT:
+				{
+				ellipce->toLeft = false;
+				}
+				break;
+			case VK_DOWN:
+				{
+				ellipce->toDown = false;
+				}
+				break;
+			case VK_UP:
+				{
+					//ellipce->Stop();
+				ellipce->toUp = false;
+				}
+				break;
+			}
+			//KillTimer(hWnd, DRAW_TIMER);
+		}
+		break;
+	case WM_MOUSEWHEEL:
+		{
+			/*int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+			if (zDelta > 0)
+			{
+				SetTimer(hWnd, TIMER_WHEEL_UP, TIMER_INTERVAL, (TIMERPROC)NULL);
+			}
+			if (zDelta < 0)
+			{
+				SetTimer(hWnd, TIMER_WHEEL_DOWN, TIMER_INTERVAL, (TIMERPROC)NULL);
+			}
+			if (zDelta = 0)
+			{
+				KillTimer(hWnd, TIMER_KEY_DOWN);
+				KillTimer(hWnd, TIMER_WHEEL_UP);
+			}*/
+			//if (wParam)
+		}
+		break;
+	case WM_TIMER:
+	{
+		switch (wParam)
+		{
+		case DRAW_TIMER:
+		{
+			ellipce->Draw();
+			InvalidateRect(hWnd, NULL, TRUE);
+			UpdateWindow(hWnd);
+		}
+		break;
+		}
+
+
+		
+	}
+		break;
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
@@ -159,7 +304,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-// Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
