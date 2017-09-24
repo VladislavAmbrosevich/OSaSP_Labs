@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Lab1MainProject.h"
 
+
 #define MAX_LOADSTRING 100
 
 HINSTANCE hInst;
@@ -11,7 +12,15 @@ class Ellipce
 {
 	public:
 		int x1, y1, x2, y2;
+		int acceleration = 0;
 		bool toRight = false, toLeft = false, toDown = false, toUp = false;
+		bool isBrake = false;
+		
+		int verticalSpeed = 0, horizontalSpeed = 0;
+		int braking = 1;
+		int step = 2;
+		int maxRight = 0, maxDown = 0;
+
 
 	Ellipce(int x1 = 0, int y1 = 0, int x2 = 0, int y2 = 0)
 	{
@@ -22,57 +31,76 @@ class Ellipce
 	}
 
 	public:
+		void ProcessKeys()
+		{
+			if (toRight)
+			{
+				horizontalSpeed += step;
+			}
+			if (toLeft)
+			{
+				horizontalSpeed -= step;
+			}
+
+			if (toDown)
+			{
+				verticalSpeed += step;
+			}
+			if (toUp)
+			{
+				verticalSpeed -= step;
+			}
+		}
+
+
 		void Draw()
 		{
-			if (this->toRight)
+			if (x1 < 0)
 			{
-				this->MoveRight();
+				horizontalSpeed = -horizontalSpeed;
 			}
-			if (this->toLeft)
+			if (x2 > maxRight)
 			{
-				this->MoveLeft();
+				horizontalSpeed = -horizontalSpeed;
 			}
-			if (this->toDown)
+			if (y1 < 0)
 			{
-				this->MoveDown();
+				verticalSpeed = -verticalSpeed;
 			}
-			if (this->toUp)
+			if (y2 > maxDown)
 			{
-				this->MoveUp();
+				verticalSpeed = -verticalSpeed;
+			}
+
+
+			this->x1 += horizontalSpeed;
+			this->x2 += horizontalSpeed;
+
+			this->y1 += verticalSpeed;
+			this->y2 += verticalSpeed;
+
+			if (verticalSpeed > 0)
+			{
+				verticalSpeed -= braking;
+			}
+			if (verticalSpeed < 0)
+			{
+				verticalSpeed += braking;
+			}
+
+			if (horizontalSpeed > 0)
+			{
+				horizontalSpeed -= braking;
+			}
+			if (horizontalSpeed < 0)
+			{
+				horizontalSpeed += braking;
 			}
 		}
 		
 		void Stop()
 		{
-			this->toDown = false;
-			this->toUp = false;
-			this->toRight = false;
-			this->toLeft = false;
-		}
-
-	private: 
-		void MoveLeft()
-		{
-			this->x1--;
-			this->x2--;
-		}
-
-		void MoveRight()
-		{
-			this->x1++;
-			this->x2++;
-		}
-
-		void MoveDown()
-		{
-			this->y1++;
-			this->y2++;
-		}
-
-		void MoveUp()
-		{
-			this->y1--;
-			this->y2--;
+			toDown = toUp = toRight = toLeft = false;
 		}
 };
 
@@ -82,8 +110,9 @@ bool isMoveEllipce = false;
 UINT_PTR timer;
 const int TIMER_KEY_RIGHT = 0, TIMER_KEY_LEFT = 1, TIMER_KEY_UP = 2, TIMER_KEY_DOWN = 3;
 const int TIMER_WHEEL_UP = 4, TIMER_WHEEL_DOWN = 5;
-const int DRAW_TIMER = INT_MAX;
-const int TIMER_INTERVAL = 10;
+const int DRAW_TIMER = 0, SPEED_TIMER = 1;
+const int TIMER_INTERVAL = 20;
+int windowHeight = 0, windowWidth = 0;
 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
@@ -159,9 +188,21 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
       return FALSE;
    }
 
+   RECT clientRect;
+   int windowWidth = windowHeight = 0;
+
+   if (GetClientRect(hWnd, &clientRect))
+   {
+	   windowWidth = clientRect.right - clientRect.left;
+	   windowHeight = clientRect.bottom - clientRect.top;
+   }
+   ellipce->maxRight = windowWidth;
+   ellipce->maxDown = windowHeight;
+   //windowWidth = clientRect->right - clientRect->left;
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
    SetTimer(hWnd, DRAW_TIMER, TIMER_INTERVAL, (TIMERPROC)NULL);
+   SetTimer(hWnd, SPEED_TIMER, TIMER_INTERVAL, (TIMERPROC)NULL);
 
    return TRUE;
 }
@@ -188,12 +229,40 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_PAINT:
         {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-			Ellipse(hdc, ellipce->x1, ellipce->y1, ellipce->x2, ellipce->y2);
-            EndPaint(hWnd, &ps);
+		HDC hDC, hCompatibleDC;
+		PAINTSTRUCT PaintStruct;
+		HANDLE hBitmap, hOldBitmap;
+		RECT Rect;
+		BITMAP Bitmap;
+
+            hDC = BeginPaint(hWnd, &PaintStruct);
+//			Ellipse(hdc, ellipce->x1, ellipce->y1, ellipce->x2, ellipce->y2);
+			hBitmap = LoadImage(NULL, L"csharp.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+
+			GetObject(hBitmap, sizeof(BITMAP), &Bitmap);
+			hCompatibleDC = CreateCompatibleDC(hDC);
+			hOldBitmap = SelectObject(hCompatibleDC, hBitmap);
+			StretchBlt(hDC, ellipce->x1, ellipce->y1, ellipce->x2 - ellipce->x1, ellipce->y2 - ellipce->y1, hCompatibleDC, 0, 0, Bitmap.bmWidth, Bitmap.bmHeight, SRCCOPY);
+			SelectObject(hCompatibleDC, hOldBitmap);
+			DeleteObject(hBitmap);
+			DeleteDC(hCompatibleDC);
+			EndPaint(hWnd, &PaintStruct);
         }
         break;
+	case WM_SIZE:
+		{
+		RECT clientRect;
+		int windowWidth = windowHeight = 0;
+
+		if (GetClientRect(hWnd, &clientRect))
+		{
+			windowWidth = clientRect.right - clientRect.left;
+			windowHeight = clientRect.bottom - clientRect.top;
+		}
+		ellipce->maxRight = windowWidth;
+		ellipce->maxDown = windowHeight;
+		}
+		break;
 	case WM_LBUTTONDOWN:
 		{
 
@@ -251,31 +320,38 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				break;
 			case VK_UP:
 				{
-					//ellipce->Stop();
 				ellipce->toUp = false;
 				}
 				break;
 			}
-			//KillTimer(hWnd, DRAW_TIMER);
 		}
 		break;
 	case WM_MOUSEWHEEL:
 		{
-			/*int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
-			if (zDelta > 0)
+			int zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+			int fwKeys = GET_KEYSTATE_WPARAM(wParam);
+			if (fwKeys == MK_SHIFT)
 			{
-				SetTimer(hWnd, TIMER_WHEEL_UP, TIMER_INTERVAL, (TIMERPROC)NULL);
+				if (zDelta > 0)
+				{
+					ellipce->horizontalSpeed -= ellipce->step * 2;
+				}
+				if (zDelta < 0)
+				{
+					ellipce->horizontalSpeed += ellipce->step * 2;
+				}
 			}
-			if (zDelta < 0)
+			else
 			{
-				SetTimer(hWnd, TIMER_WHEEL_DOWN, TIMER_INTERVAL, (TIMERPROC)NULL);
+				if (zDelta > 0)
+				{
+					ellipce->verticalSpeed -= ellipce->step * 2;
+				}
+				if (zDelta < 0)
+				{
+					ellipce->verticalSpeed += ellipce->step * 2;
+				}
 			}
-			if (zDelta = 0)
-			{
-				KillTimer(hWnd, TIMER_KEY_DOWN);
-				KillTimer(hWnd, TIMER_WHEEL_UP);
-			}*/
-			//if (wParam)
 		}
 		break;
 	case WM_TIMER:
@@ -285,14 +361,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case DRAW_TIMER:
 		{
 			ellipce->Draw();
+			
 			InvalidateRect(hWnd, NULL, TRUE);
-			UpdateWindow(hWnd);
+			//UpdateWindow(hWnd);
+		}
+		break;
+		case SPEED_TIMER:
+		{
+			ellipce->ProcessKeys();
 		}
 		break;
 		}
-
-
-		
 	}
 		break;
     case WM_DESTROY:
