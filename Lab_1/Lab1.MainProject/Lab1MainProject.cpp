@@ -13,15 +13,11 @@ struct WindowRect
 	int width = 0, height = 0;
 };
 
-MovableObjecct *movableObject = new MovableObjecct(0, 0, 100, 100);
+MovableObjecct *movableObject = new MovableObjecct(0, 0, 100, 120);
 
-bool isMovemovableObject = false;
-UINT_PTR timer;
-const int TIMER_KEY_RIGHT = 0, TIMER_KEY_LEFT = 1, TIMER_KEY_UP = 2, TIMER_KEY_DOWN = 3;
-const int TIMER_WHEEL_UP = 4, TIMER_WHEEL_DOWN = 5;
 const int DRAW_TIMER = 0, SPEED_TIMER = 1;
 const int TIMER_INTERVAL = 20;
-int windowHeight = 0, windowWidth = 0;
+const wchar_t PICTURE_NAME[20] = L"git.bmp";
 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
@@ -67,7 +63,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
     wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style          = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+    wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = WndProc;
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
@@ -85,7 +81,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 WindowRect GetWindowSize(HWND hWnd)
 {
 	RECT clientRect;
-	auto windowWidth = windowHeight = 0;
+	auto windowWidth = 0, windowHeight = 0;
 
 	if (GetClientRect(hWnd, &clientRect))
 	{
@@ -94,7 +90,6 @@ WindowRect GetWindowSize(HWND hWnd)
 	}
 
 	WindowRect windowRect;
-
 	windowRect.width = windowWidth;
 	windowRect.height = windowHeight;
 
@@ -103,24 +98,25 @@ WindowRect GetWindowSize(HWND hWnd)
 
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   hInst = hInstance;
+	hInst = hInstance;
 
-	const auto hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+	const auto hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
+	if (!hWnd)
+	{
+		return FALSE;
+	}
 
 	const auto rect = GetWindowSize(hWnd);
 	movableObject->SetMaxCoordinates(rect.width, rect.height);
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
-   SetTimer(hWnd, DRAW_TIMER, TIMER_INTERVAL, static_cast<TIMERPROC>(nullptr));
-   SetTimer(hWnd, SPEED_TIMER, TIMER_INTERVAL, static_cast<TIMERPROC>(nullptr));
+	movableObject->SetX1((rect.width - 100) / 2);
+	movableObject->SetY1((rect.height - 120) / 2);
+	ShowWindow(hWnd, nCmdShow);
+	UpdateWindow(hWnd);
+	SetTimer(hWnd, DRAW_TIMER, TIMER_INTERVAL, static_cast<TIMERPROC>(nullptr));
+	SetTimer(hWnd, SPEED_TIMER, TIMER_INTERVAL, static_cast<TIMERPROC>(nullptr));
 
-   return TRUE;
+	return TRUE;
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -144,30 +140,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_PAINT:
-        {
-	        PAINTSTRUCT paintStruct;
-	        RECT rect;
+	{
+		PAINTSTRUCT paintStruct;
 		BITMAP bitmap;
-
-	        const auto hDc = BeginPaint(hWnd, &paintStruct);
-	        const auto hBitmap = LoadImage(nullptr, L"csharp.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-
-			GetObject(hBitmap, sizeof(BITMAP), &bitmap);
-	        const auto hCompatibleDc = CreateCompatibleDC(hDc);
-	        const auto hOldBitmap = SelectObject(hCompatibleDc, hBitmap);
-			StretchBlt(hDc, movableObject->x1, movableObject->y1, movableObject->x2 - movableObject->x1, movableObject->y2 - movableObject->y1, hCompatibleDc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
-			SelectObject(hCompatibleDc, hOldBitmap);
-			DeleteObject(hBitmap);
-			DeleteDC(hCompatibleDc);
-			EndPaint(hWnd, &paintStruct);
-        }
+		const auto hDc = BeginPaint(hWnd, &paintStruct);
+		const auto hBitmap = LoadImage(nullptr, PICTURE_NAME, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+		GetObject(hBitmap, sizeof(BITMAP), &bitmap);
+		const auto hCompatibleDc = CreateCompatibleDC(hDc);
+		const auto hOldBitmap = SelectObject(hCompatibleDc, hBitmap);
+		StretchBlt(hDc, movableObject->GetX1(), movableObject->GetY1(), movableObject->GetWidth(), movableObject->GetHeight(), hCompatibleDc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
+		SelectObject(hCompatibleDc, hOldBitmap);
+		DeleteObject(hBitmap);
+		DeleteDC(hCompatibleDc);
+		EndPaint(hWnd, &paintStruct);
+	}
         break;
 	case WM_SIZE:
-		{
+	{
 		const auto rect = GetWindowSize(hWnd);
 		movableObject->SetMaxCoordinates(rect.width, rect.height);
-		}
+	}
 		break;
+	case WM_GETMINMAXINFO:
+	{
+		const auto lpMmi = reinterpret_cast<LPMINMAXINFO>(lParam);
+		lpMmi->ptMinTrackSize.x = movableObject->GetX2() + 20;
+		lpMmi->ptMinTrackSize.y = movableObject->GetY2() + 60;
+	}
+	break;
 	case WM_KEYDOWN:
 		
 		switch (wParam)
@@ -231,22 +231,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				if (zDelta > 0)
 				{
-					movableObject->horizontalSpeed -= movableObject->acceleration * 2;
+					movableObject->AddSpeed(MovableObjecct::Right);
 				}
 				if (zDelta < 0)
 				{
-					movableObject->horizontalSpeed += movableObject->acceleration * 2;
+					movableObject->AddSpeed(MovableObjecct::Left);
 				}
 			}
 			else
 			{
 				if (zDelta > 0)
 				{
-					movableObject->verticalSpeed -= movableObject->acceleration * 2;
+					movableObject->AddSpeed(MovableObjecct::Bottom);
 				}
 				if (zDelta < 0)
 				{
-					movableObject->verticalSpeed += movableObject->acceleration * 2;
+					movableObject->AddSpeed(MovableObjecct::Top);
 				}
 			}
 		}
@@ -258,14 +258,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case DRAW_TIMER:
 		{
 			movableObject->Draw();
-			
 			if (movableObject->IsPositionChanged())
 			{
 				InvalidateRect(hWnd, nullptr, TRUE);
 				UpdateWindow(hWnd);
 			}
 			movableObject->AssignOldValues();
-			
 		}
 		break;
 		case SPEED_TIMER:

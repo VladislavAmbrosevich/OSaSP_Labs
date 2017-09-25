@@ -2,41 +2,81 @@
 
 class MovableObjecct
 {
+	int _x1, _y1, _width, _height;
+	int _oldX1, _oldY1, _oldWidth, _oldHeight;
+	int _acceleration = 2;
+	int _maxWidth = 0, _maxHeight = 0;
+	int _braking = 1;
+	int _verticalSpeed = 0, _horizontalSpeed = 0;
+
 public:
-	int x1, y1, x2, y2;
-	int oldX1, oldX2, oldY1, oldY2;
+	
+	enum Direction {Left, Right, Top, Bottom};
 	bool toRight = false, toLeft = false, toDown = false, toUp = false;
 
-	int verticalSpeed = 0, horizontalSpeed = 0;
-	int braking = 1;
-	int acceleration = 2;
-	int maxWidth = 0, maxHeight = 0;
-
-
-	explicit MovableObjecct(int x1 = 0, int y1 = 0, int x2 = 0, int y2 = 0)
+	explicit MovableObjecct(int x1 = 0, int y1 = 0, int width = 0, int height = 0)
 	{
-		this->x1 = x1;
-		this->y1 = y1;
-		this->x2 = x2;
-		this->y2 = y2;
+		this->_x1 = x1;
+		this->_y1 = y1;
+		this->_width = width;
+		this->_height = height;
 
-		this->oldX1 = x1;
-		this->oldY1 = y1;
-		this->oldX2 = x2;
-		this->oldY2 = y2;
+		AssignOldValues();
 	}
 
 	void AssignOldValues()
 	{
-		oldX1 = x1;
-		oldY1 = y1;
-		oldX2 = x2;
-		oldY2 = y2;
+		_oldX1 = _x1;
+		_oldY1 = _y1;
+		_oldWidth = _width;
+		_oldHeight = _height;
+	}
+
+	int GetX1() const
+	{
+		return _x1;
+	}
+	int GetX2() const
+	{
+		return _x1 + _width;
+	}
+	int GetY1() const
+	{
+		return _y1;
+	}
+	int GetY2() const
+	{
+		return _y1 + _height;
+	}
+	int GetWidth() const
+	{
+		return _width;
+	}
+	int GetHeight() const
+	{
+		return _height;
+	}
+
+	void SetX1(int x1) 
+	{
+		this->_x1 = x1;
+	}
+	void SetY1(int y1)
+	{
+		this->_y1 = y1;
+	}
+	void SetWidth(int width)
+	{
+		this->_width = width;
+	}
+	void SetHeight(int height)
+	{
+		this->_height = height;
 	}
 
 	bool IsPositionChanged() const
 	{
-		if (x1 == oldX1 && y1 == oldY1)
+		if (_x1 == _oldX1 && _y1 == _oldY1)
 		{
 			return false;
 		}
@@ -45,78 +85,97 @@ public:
 
 	void SetMaxCoordinates(int maxWidth, int maxHeight)
 	{
-		this->maxWidth = maxWidth;
-		this->maxHeight = maxHeight;
+		this->_maxWidth = maxWidth;
+		this->_maxHeight = maxHeight;
+	}
+
+	void AddSpeed(Direction direction)
+	{
+		switch (direction)
+		{
+		case Left:
+		{
+			_horizontalSpeed += _acceleration;
+		}
+		break;
+		case Right:
+		{
+			_horizontalSpeed -= _acceleration;
+		}
+		break;
+		case Top:
+		{
+			_verticalSpeed += _acceleration;
+		}
+		break;
+		case Bottom:
+		{
+			_verticalSpeed -= _acceleration;
+		}
+		break;
+		default:;
+		}
 	}
 
 	void ProcessKeys()
 	{
 		if (toRight)
 		{
-			horizontalSpeed += acceleration;
+			_horizontalSpeed += _acceleration;
 		}
 		if (toLeft)
 		{
-			horizontalSpeed -= acceleration;
+			_horizontalSpeed -= _acceleration;
 		}
 
 		if (toDown)
 		{
-			verticalSpeed += acceleration;
+			_verticalSpeed += _acceleration;
 		}
 		if (toUp)
 		{
-			verticalSpeed -= acceleration;
+			_verticalSpeed -= _acceleration;
 		}
 	}
 
 	void Draw()
 	{
-		if (x1 < 0)
+		if (_x1 < 0)
 		{
-			horizontalSpeed = -horizontalSpeed;
+			_horizontalSpeed = -_horizontalSpeed;
 		}
-		if (x2 > maxWidth)
+		if (_x1+_width > _maxWidth)
 		{
-			horizontalSpeed = -horizontalSpeed;
+			_horizontalSpeed = -_horizontalSpeed;
 		}
-		if (y1 < 0)
+		if (_y1 < 0)
 		{
-			verticalSpeed = -verticalSpeed;
+			_verticalSpeed = -_verticalSpeed;
 		}
-		if (y2 > maxHeight)
+		if (_y1+_height > _maxHeight)
 		{
-			verticalSpeed = -verticalSpeed;
-		}
-
-
-		this->x1 += horizontalSpeed;
-		this->x2 += horizontalSpeed;
-
-		this->y1 += verticalSpeed;
-		this->y2 += verticalSpeed;
-
-		if (verticalSpeed > 0)
-		{
-			verticalSpeed -= braking;
-		}
-		if (verticalSpeed < 0)
-		{
-			verticalSpeed += braking;
+			_verticalSpeed = -_verticalSpeed;
 		}
 
-		if (horizontalSpeed > 0)
-		{
-			horizontalSpeed -= braking;
-		}
-		if (horizontalSpeed < 0)
-		{
-			horizontalSpeed += braking;
-		}
-	}
+		this->_x1 += _horizontalSpeed;
+		this->_y1 += _verticalSpeed;
 
-	void Stop()
-	{
-		toDown = toUp = toRight = toLeft = false;
+		if (_verticalSpeed > 0)
+		{
+			_verticalSpeed -= _braking;
+		}
+		if (_verticalSpeed < 0)
+		{
+			_verticalSpeed += _braking;
+		}
+
+		if (_horizontalSpeed > 0)
+		{
+			_horizontalSpeed -= _braking;
+		}
+		if (_horizontalSpeed < 0)
+		{
+			_horizontalSpeed += _braking;
+		}
 	}
 };
