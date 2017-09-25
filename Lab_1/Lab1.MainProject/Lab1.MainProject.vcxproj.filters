@@ -30,12 +30,18 @@
     <ClInclude Include="Lab1MainProject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="MovableObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Lab1MainProject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MovableObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
