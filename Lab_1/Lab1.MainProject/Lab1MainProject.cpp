@@ -13,10 +13,10 @@ struct WindowRect
 	int width = 0, height = 0;
 };
 
-MovableObjecct *movableObject = new MovableObjecct(0, 0, 100, 120);
+MovableObject *movableObject = new MovableObject(0, 0, 100, 120);
 
 const int DRAW_TIMER = 0, SPEED_TIMER = 1;
-const int TIMER_INTERVAL = 20;
+const int TIMER_INTERVAL = 34;
 const wchar_t PICTURE_NAME[20] = L"git.bmp";
 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -148,7 +148,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		GetObject(hBitmap, sizeof(BITMAP), &bitmap);
 		const auto hCompatibleDc = CreateCompatibleDC(hDc);
 		const auto hOldBitmap = SelectObject(hCompatibleDc, hBitmap);
-		StretchBlt(hDc, movableObject->GetX1(), movableObject->GetY1(), movableObject->GetWidth(), movableObject->GetHeight(), hCompatibleDc, 0, 0, bitmap.bmWidth, bitmap.bmHeight, SRCCOPY);
+		BitBlt(hDc, movableObject->GetX1(), movableObject->GetY1(), movableObject->GetWidth(), movableObject->GetHeight(), hCompatibleDc, 0, 0, SRCCOPY);
 		SelectObject(hCompatibleDc, hOldBitmap);
 		DeleteObject(hBitmap);
 		DeleteDC(hCompatibleDc);
@@ -174,22 +174,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 		case VK_RIGHT:
 			{
-			movableObject->StartAcceleration(MovableObjecct::Right);
+			movableObject->StartAcceleration(MovableObject::Right);
 			}
 			break;
 		case VK_LEFT:
 			{
-			movableObject->StartAcceleration(MovableObjecct::Left);
+			movableObject->StartAcceleration(MovableObject::Left);
 			}
 			break;
 		case VK_DOWN:
 			{
-			movableObject->StartAcceleration(MovableObjecct::Bottom);
+			movableObject->StartAcceleration(MovableObject::Bottom);
 			}
 			break;
 		case VK_UP:
 			{
-			movableObject->StartAcceleration(MovableObjecct::Top);
+			movableObject->StartAcceleration(MovableObject::Top);
 			}
 			break;
 		default: ;
@@ -201,22 +201,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 			case VK_RIGHT:
 			{
-				movableObject->StopAcceleration(MovableObjecct::Right);
+				movableObject->StopAcceleration(MovableObject::Right);
 			}
 			break;
 			case VK_LEFT:
 			{
-				movableObject->StopAcceleration(MovableObjecct::Left);
+				movableObject->StopAcceleration(MovableObject::Left);
 			}
 			break;
 			case VK_DOWN:
 			{
-				movableObject->StopAcceleration(MovableObjecct::Bottom);
+				movableObject->StopAcceleration(MovableObject::Bottom);
 			}
 			break;
 			case VK_UP:
 			{
-				movableObject->StopAcceleration(MovableObjecct::Top);
+				movableObject->StopAcceleration(MovableObject::Top);
 			}
 			break;
 			default: ;
@@ -231,22 +231,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				if (zDelta > 0)
 				{
-					movableObject->AddSpeed(MovableObjecct::Right);
+					movableObject->AddSpeed(MovableObject::Right);
 				}
 				if (zDelta < 0)
 				{
-					movableObject->AddSpeed(MovableObjecct::Left);
+					movableObject->AddSpeed(MovableObject::Left);
 				}
 			}
 			else
 			{
 				if (zDelta > 0)
 				{
-					movableObject->AddSpeed(MovableObjecct::Bottom);
+					movableObject->AddSpeed(MovableObject::Bottom);
 				}
 				if (zDelta < 0)
 				{
-					movableObject->AddSpeed(MovableObjecct::Top);
+					movableObject->AddSpeed(MovableObject::Top);
 				}
 			}
 		}
@@ -258,12 +258,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case DRAW_TIMER:
 		{
 			movableObject->Draw();
-			if (movableObject->IsPositionChanged())
-			{
-				InvalidateRect(hWnd, nullptr, TRUE);
-				UpdateWindow(hWnd);
-			}
-			movableObject->AssignOldValues();
+			InvalidateRect(hWnd, nullptr, TRUE);
+			UpdateWindow(hWnd);
 		}
 		break;
 		case SPEED_TIMER:

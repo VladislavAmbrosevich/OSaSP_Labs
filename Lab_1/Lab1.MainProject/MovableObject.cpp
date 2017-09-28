@@ -1,236 +1,201 @@
 ﻿#include "stdafx.h"
+#include "MovableObject.h"
 
-class MovableObjecct
+MovableObject::MovableObject(int x1, int y1, int width, int height)
 {
-	int _x1, _y1, _width, _height;
-	int _oldX1, _oldY1, _oldWidth, _oldHeight;
-	int _acceleration = 2;
-	int _maxWidth = 0, _maxHeight = 0;
-	int _braking = 1;
-	int _verticalSpeed = 0, _horizontalSpeed = 0;
-	bool _toRight = false, _toLeft = false, _toDown = false, _toUp = false;
+	_x1 = x1;
+	_y1 = y1;
+	_width = width;
+	_height = height;
+}
 
-public:
-	enum Direction {Left, Right, Top, Bottom};
+int MovableObject::GetX1() const
+{
+	return _x1;
+}
 
-	explicit MovableObjecct(int x1 = 0, int y1 = 0, int width = 0, int height = 0)
-	{
-		this->_x1 = x1;
-		this->_y1 = y1;
-		this->_width = width;
-		this->_height = height;
+int MovableObject::GetX2() const
+{
+	return _x1 + _width;
+}
 
-		AssignOldValues();
-	}
+int MovableObject::GetY1() const
+{
+	return _y1;
+}
 
-	void AssignOldValues()
-	{
-		_oldX1 = _x1;
-		_oldY1 = _y1;
-		_oldWidth = _width;
-		_oldHeight = _height;
-	}
+int MovableObject::GetY2() const
+{
+	return _y1 + _height;
+}
 
-	int GetX1() const
-	{
-		return _x1;
-	}
-	int GetX2() const
-	{
-		return _x1 + _width;
-	}
-	int GetY1() const
-	{
-		return _y1;
-	}
-	int GetY2() const
-	{
-		return _y1 + _height;
-	}
-	int GetWidth() const
-	{
-		return _width;
-	}
-	int GetHeight() const
-	{
-		return _height;
-	}
+int MovableObject::GetWidth() const
+{
+	return _width;
+}
 
-	void SetX1(int x1) 
-	{
-		this->_x1 = x1;
-	}
-	void SetY1(int y1)
-	{
-		this->_y1 = y1;
-	}
-	void SetWidth(int width)
-	{
-		this->_width = width;
-	}
-	void SetHeight(int height)
-	{
-		this->_height = height;
-	}
+int MovableObject::GetHeight() const
+{
+	return _height;
+}
 
-	bool IsPositionChanged() const
-	{
-		if (_x1 == _oldX1 && _y1 == _oldY1)
-		{
-			return false;
-		}
-		return true;
-	}
+void MovableObject::SetX1(int x1)
+{
+	_x1 = x1;
+}
+void MovableObject::SetY1(int y1)
+{
+	_y1 = y1;
+}
+void MovableObject::SetWidth(int width)
+{
+	_width = width;
+}
+void MovableObject::SetHeight(int height)
+{
+	_height = height;
+}
 
-	void SetMaxCoordinates(int maxWidth, int maxHeight)
-	{
-		this->_maxWidth = maxWidth;
-		this->_maxHeight = maxHeight;
-	}
+void MovableObject::SetMaxCoordinates(int maxWidth, int maxHeight)
+{
+	_maxWidth = maxWidth;
+	_maxHeight = maxHeight;
+}
 
-	void AddSpeed(Direction direction)
+void  MovableObject::AddSpeed(Direction direction)
+{
+	switch (direction)
 	{
-		switch (direction)
-		{
-		case Left:
-		{
-			_horizontalSpeed += _acceleration;
-		}
-		break;
-		case Right:
-		{
-			_horizontalSpeed -= _acceleration;
-		}
-		break;
-		case Top:
-		{
-			_verticalSpeed += _acceleration;
-		}
-		break;
-		case Bottom:
-		{
-			_verticalSpeed -= _acceleration;
-		}
-		break;
-		default:;
-		}
+	case Left:
+	{
+		_horizontalSpeed += _acceleration;
 	}
-
-	void StartAcceleration(Direction direction)
+	break;
+	case Right:
 	{
-		switch (direction)
-		{
-		case Left:
-		{
-			_toLeft = true;
-		}
-		break;
-		case Right:
-		{
-			_toRight = true;
-		}
-		break;
-		case Top:
-		{
-			_toUp = true;
-		}
-		break;
-		case Bottom:
-		{
-			_toDown = true;
-		}
-		break;
-		default:;
-		}
+		_horizontalSpeed -= _acceleration;
 	}
-
-	void StopAcceleration(Direction direction)
+	break;
+	case Top:
 	{
-		switch (direction)
-		{
-		case Left:
-		{
-			_toLeft = false;
-		}
-		break;
-		case Right:
-		{
-			_toRight = false;
-		}
-		break;
-		case Top:
-		{
-			_toUp = false;
-		}
-		break;
-		case Bottom:
-		{
-			_toDown = false;
-		}
-		break;
-		default:;
-		}
+		_verticalSpeed += _acceleration;
+	}
+	break;
+	case Bottom:
+	{
+		_verticalSpeed -= _acceleration;
+	}
+	break;
+	default:;
+	}
+}
+
+void  MovableObject::StartAcceleration(Direction direction)
+{
+	switch (direction)
+	{
+	case Left:
+	{
+		_toLeft = true;
+	}
+	break;
+	case Right:
+	{
+		_toRight = true;
+	}
+	break;
+	case Top:
+	{
+		_toUp = true;
+	}
+	break;
+	case Bottom:
+	{
+		_toDown = true;
+	}
+	break;
+	default:;
+	}
+}
+
+void  MovableObject::StopAcceleration(Direction direction)
+{
+	switch (direction)
+	{
+	case Left:
+	{
+		_toLeft = false;
+	}
+	break;
+	case Right:
+	{
+		_toRight = false;
+	}
+	break;
+	case Top:
+	{
+		_toUp = false;
+	}
+	break;
+	case Bottom:
+	{
+		_toDown = false;
+	}
+	break;
+	default:;
+	}
+}
+
+void  MovableObject::ProcessKeys()
+{
+	if (_toRight)
+	{
+		_horizontalSpeed += _acceleration;
+	}
+	if (_toLeft)
+	{
+		_horizontalSpeed -= _acceleration;
 	}
 
-	void ProcessKeys()
+	if (_toDown)
 	{
-		if (_toRight)
-		{
-			_horizontalSpeed += _acceleration;
-		}
-		if (_toLeft)
-		{
-			_horizontalSpeed -= _acceleration;
-		}
+		_verticalSpeed += _acceleration;
+	}
+	if (_toUp)
+	{
+		_verticalSpeed -= _acceleration;
+	}
+}
 
-		if (_toDown)
-		{
-			_verticalSpeed += _acceleration;
-		}
-		if (_toUp)
-		{
-			_verticalSpeed -= _acceleration;
-		}
+void  MovableObject::Draw()
+{
+	if (_x1 < 0 || _x1 + _width > _maxWidth)
+	{
+		_horizontalSpeed = -_horizontalSpeed;
+	}
+	if (_y1 < 0 || _y1 + _height > _maxHeight)
+	{
+		_verticalSpeed = -_verticalSpeed;
 	}
 
-	void Draw()
+	this->_x1 += _horizontalSpeed;
+	this->_y1 += _verticalSpeed;
+
+	if (_verticalSpeed > 0)
 	{
-		if (_x1 < 0)
-		{
-			_horizontalSpeed = -_horizontalSpeed;
-		}
-		if (_x1+_width > _maxWidth)
-		{
-			_horizontalSpeed = -_horizontalSpeed;
-		}
-		if (_y1 < 0)
-		{
-			_verticalSpeed = -_verticalSpeed;
-		}
-		if (_y1+_height > _maxHeight)
-		{
-			_verticalSpeed = -_verticalSpeed;
-		}
-
-		this->_x1 += _horizontalSpeed;
-		this->_y1 += _verticalSpeed;
-
-		if (_verticalSpeed > 0)
-		{
-			_verticalSpeed -= _braking;
-		}
-		if (_verticalSpeed < 0)
-		{
-			_verticalSpeed += _braking;
-		}
-
-		if (_horizontalSpeed > 0)
-		{
-			_horizontalSpeed -= _braking;
-		}
-		if (_horizontalSpeed < 0)
-		{
-			_horizontalSpeed += _braking;
-		}
+		_verticalSpeed -= _braking;
 	}
-};
+	if (_verticalSpeed < 0)
+	{
+		_verticalSpeed += _braking;
+	}
+
+	if (_horizontalSpeed > 0)
+	{
+		_horizontalSpeed -= _braking;
+	}
+	if (_horizontalSpeed < 0)
+	{
+		_horizontalSpeed += _braking;
+	}
+}
