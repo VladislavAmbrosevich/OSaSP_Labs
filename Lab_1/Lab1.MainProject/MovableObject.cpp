@@ -8,11 +8,10 @@ class MovableObjecct
 	int _maxWidth = 0, _maxHeight = 0;
 	int _braking = 1;
 	int _verticalSpeed = 0, _horizontalSpeed = 0;
+	bool _toRight = false, _toLeft = false, _toDown = false, _toUp = false;
 
 public:
-	
 	enum Direction {Left, Right, Top, Bottom};
-	bool toRight = false, toLeft = false, toDown = false, toUp = false;
 
 	explicit MovableObjecct(int x1 = 0, int y1 = 0, int width = 0, int height = 0)
 	{
@@ -117,22 +116,78 @@ public:
 		}
 	}
 
+	void StartAcceleration(Direction direction)
+	{
+		switch (direction)
+		{
+		case Left:
+		{
+			_toLeft = true;
+		}
+		break;
+		case Right:
+		{
+			_toRight = true;
+		}
+		break;
+		case Top:
+		{
+			_toUp = true;
+		}
+		break;
+		case Bottom:
+		{
+			_toDown = true;
+		}
+		break;
+		default:;
+		}
+	}
+
+	void StopAcceleration(Direction direction)
+	{
+		switch (direction)
+		{
+		case Left:
+		{
+			_toLeft = false;
+		}
+		break;
+		case Right:
+		{
+			_toRight = false;
+		}
+		break;
+		case Top:
+		{
+			_toUp = false;
+		}
+		break;
+		case Bottom:
+		{
+			_toDown = false;
+		}
+		break;
+		default:;
+		}
+	}
+
 	void ProcessKeys()
 	{
-		if (toRight)
+		if (_toRight)
 		{
 			_horizontalSpeed += _acceleration;
 		}
-		if (toLeft)
+		if (_toLeft)
 		{
 			_horizontalSpeed -= _acceleration;
 		}
 
-		if (toDown)
+		if (_toDown)
 		{
 			_verticalSpeed += _acceleration;
 		}
-		if (toUp)
+		if (_toUp)
 		{
 			_verticalSpeed -= _acceleration;
 		}

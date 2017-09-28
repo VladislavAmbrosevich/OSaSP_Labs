@@ -174,22 +174,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 		case VK_RIGHT:
 			{
-			movableObject->toRight = true;
+			movableObject->StartAcceleration(MovableObjecct::Right);
 			}
 			break;
 		case VK_LEFT:
 			{
-			movableObject->toLeft = true;
+			movableObject->StartAcceleration(MovableObjecct::Left);
 			}
 			break;
 		case VK_DOWN:
 			{
-			movableObject->toDown = true;
+			movableObject->StartAcceleration(MovableObjecct::Bottom);
 			}
 			break;
 		case VK_UP:
 			{
-			movableObject->toUp = true;
+			movableObject->StartAcceleration(MovableObjecct::Top);
 			}
 			break;
 		default: ;
@@ -200,25 +200,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			switch (wParam)
 			{
 			case VK_RIGHT:
-				{
-				movableObject->toRight = false;
-				}
-				break;
+			{
+				movableObject->StopAcceleration(MovableObjecct::Right);
+			}
+			break;
 			case VK_LEFT:
-				{
-				movableObject->toLeft = false;
-				}
-				break;
+			{
+				movableObject->StopAcceleration(MovableObjecct::Left);
+			}
+			break;
 			case VK_DOWN:
-				{
-				movableObject->toDown = false;
-				}
-				break;
+			{
+				movableObject->StopAcceleration(MovableObjecct::Bottom);
+			}
+			break;
 			case VK_UP:
-				{
-				movableObject->toUp = false;
-				}
-				break;
+			{
+				movableObject->StopAcceleration(MovableObjecct::Top);
+			}
+			break;
 			default: ;
 			}
 		}
