@@ -169,14 +169,27 @@ void  MovableObject::ProcessKeys()
 
 void  MovableObject::Draw()
 {
-	if (_x1 < 0 || _x1 + _width > _maxWidth)
+	if (_x1 < 0)
 	{
+		_x1 = 1;
 		_horizontalSpeed = -_horizontalSpeed;
 	}
-	if (_y1 < 0 || _y1 + _height > _maxHeight)
+	if (_x1 + _width > _maxWidth)
 	{
+		_x1 = _maxWidth - 1 - _width;
+		_horizontalSpeed = -_horizontalSpeed;
+	}
+	if (_y1 < 0) 
+	{
+		_y1 = 1;
 		_verticalSpeed = -_verticalSpeed;
 	}
+	if (_y1 + _height > _maxHeight)
+	{
+		_y1 = _maxHeight - 1 - _height;
+		_verticalSpeed = -_verticalSpeed;
+	}
+	
 
 	this->_x1 += _horizontalSpeed;
 	this->_y1 += _verticalSpeed;
