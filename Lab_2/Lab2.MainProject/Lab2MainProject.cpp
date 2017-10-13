@@ -4,6 +4,7 @@
 #include <locale>
 #include <codecvt>
 #include <commctrl.h>
+#include "TableDrawer.h"
 
 #define MAX_LOADSTRING 100
 
@@ -15,26 +16,13 @@ WCHAR szWindowClass[MAX_LOADSTRING];
 #define COLUMN_COUNT 5
 int horizontalBorders[COLUMN_COUNT][2];
 int verticalBorders[ROW_COUNT][2];
-
-int verticalTab = 0;
-int horizontalTab = 2;
-int totalHeight = 0;
-int verticalShift = 0;
-int fontHeight = 0;
-
 RECT clientSize;
 
 PhrasesProvider* phrasesProvider = new PhrasesProvider(11, 11);
 auto phrases = phrasesProvider->phrases;
+TableDrawer* tableDrawer = new TableDrawer(ROW_COUNT, COLUMN_COUNT, phrases);
 
 void OnWmPaint(HWND hWnd);
-void DrawTable(HDC hDc, bool isDraw);
-void PrintPhrases(HDC hDc);
-void CalculateHorizontalBorders(int width);
-int CalculateVerticalBorders(HDC hDc);
-void DrawBorders(HDC hDc);
-void FontSizeCalculating(HDC hDc);
-int RecalculateVerticalBorders();
 
 HWND htextbox;
 
@@ -115,16 +103,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
    return TRUE;
 }
 
-void CalculateHorizontalBorders(int width)
-{
-	const auto step = width / COLUMN_COUNT;
-	for (auto i = 0; i < COLUMN_COUNT; i++)
-	{
-		horizontalBorders[i][0] = i * step;
-		horizontalBorders[i][1] = (i + 1) * step;
-	}
-}
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static HWND hWndLV = NULL;
@@ -147,6 +125,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_DESTROY:
 		free(phrasesProvider);
+		free(tableDrawer);
 		PostQuitMessage(0);
 		break;
 
@@ -155,156 +134,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 }
 
-void FontSizeCalculating(HDC hDc)
-{
-	fontHeight = 15;
-	verticalTab = 0;
-	CalculateHorizontalBorders(clientSize.right - clientSize.left);
-	DrawTable(hDc, false);
-
-	while (clientSize.bottom - totalHeight > 10)
-	{
-		fontHeight++;
-		CalculateHorizontalBorders(clientSize.right - clientSize.left);
-		DrawTable(hDc, false);
-	}
-
-	while (totalHeight > clientSize.bottom)
-	{
-		fontHeight--;
-		CalculateHorizontalBorders(clientSize.right - clientSize.left);
-		DrawTable(hDc, false);
-	}
-
-	while (clientSize.bottom - totalHeight > ROW_COUNT + 5)
-	{
-		totalHeight = RecalculateVerticalBorders();
-		verticalTab++;
-	}
-	
-
-	DrawTable(hDc, true);
-}
-
 void OnWmPaint(HWND hWnd)
 {
 	PAINTSTRUCT ps;
-	RECT clientRect;
 
 	const auto hDc = BeginPaint(hWnd, &ps);
 	const auto color = RGB(0, 0, 0);
 	const auto pen = CreatePen(PS_SOLID, 1, color);
 	SelectObject(hDc, pen);
-	
 
-	FontSizeCalculating(hDc);
+	tableDrawer->SetClientSize(clientSize);
+	tableDrawer->RefreshTable(hDc);
 
 	DeleteObject(hDc);
 	EndPaint(hWnd, &ps);
-}
-
-int RecalculateVerticalBorders()
-{
-	int counter = 1;
-	auto totalHeight = 0;
-	for (auto i = 0; i < ROW_COUNT; i++)
-	{
-		if (i > 0)
-		{
-			verticalBorders[i][0] += counter - 1;
-		}
-		verticalBorders[i][1] += counter;
-		
-		counter++;
-	}
-	totalHeight += verticalBorders[ROW_COUNT - 1][1];
-
-	return totalHeight;
-}
-
-void DrawTable(HDC hDc, bool isDraw)
-{
-	auto font = CreateFont(fontHeight, 0, 0, 0, FW_NORMAL, false, false, false, 0, 0, 0, 0, 0, nullptr);
-	SelectObject(hDc, font);
-	
-
-	if (isDraw)
-	{
-		PrintPhrases(hDc);
-		DrawBorders(hDc);
-	}
-	else
-	{
-		totalHeight = CalculateVerticalBorders(hDc);
-	}
-	DeleteObject(font);
-}
-
-
-int CalculateVerticalBorders(HDC hDc)
-{
-	RECT rect;
-	rect.top = 0;
-
-	auto totalHeight = 0;
-	verticalBorders[0][0] = 0;
-	for (auto i = 0; i < ROW_COUNT; i++)
-	{
-		if (i > 0)
-		{
-			verticalBorders[i][0] = verticalBorders[i - 1][1];
-		}
-		auto rowMaxHeight = 0;
-		for (auto j = 0; j < COLUMN_COUNT; j++)
-		{
-			rect.bottom = INT_MAX;
-			rect.left = horizontalBorders[j][0];
-			rect.right = horizontalBorders[j][1];
-			DrawText(hDc, phrases[i][j].c_str(), -1, &rect, DT_CALCRECT | DT_WORDBREAK | DT_WORD_ELLIPSIS);
-			rowMaxHeight = max(rowMaxHeight, rect.bottom);
-		}
-		totalHeight += rowMaxHeight;
-		if (i > 0)
-		{
-			verticalBorders[i][1] = verticalBorders[i - 1][1] + rowMaxHeight;
-		}
-		else
-		{
-			verticalBorders[0][1] = rowMaxHeight;
-		}
-	}
-	return totalHeight;
-}
-
-void PrintPhrases(HDC hDc)
-{
-	RECT rect;
-
-	for (auto i = 0; i < ROW_COUNT; i++)
-	{
-		for (auto j = 0; j < COLUMN_COUNT; j++)
-		{
-			rect.top = verticalBorders[i][0] + verticalTab / 2;
-			rect.bottom = verticalBorders[i][1];
-			rect.left = horizontalBorders[j][0];
-			rect.right = horizontalBorders[j][1];
-			DrawText(hDc, phrases[i][j].c_str(), -1, &rect, DT_WORDBREAK | DT_WORD_ELLIPSIS);
-		}
-	}
-}
-
-void DrawBorders(HDC hDc)
-{
-	for (auto i = 0; i < ROW_COUNT - 1; i++)
-	{
-		MoveToEx(hDc, clientSize.left, verticalBorders[i][1], nullptr);
-		LineTo(hDc, clientSize.right, verticalBorders[i][1]);
-	}
-	for (auto i = 0; i < COLUMN_COUNT - 1; i++)
-	{
-		MoveToEx(hDc, horizontalBorders[i][1] - horizontalTab, 0, nullptr);
-		LineTo(hDc, horizontalBorders[i][1] - horizontalTab, clientSize.bottom);
-	}
 }
 
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
