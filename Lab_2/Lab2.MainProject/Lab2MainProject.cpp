@@ -14,17 +14,12 @@ WCHAR szWindowClass[MAX_LOADSTRING];
 
 #define ROW_COUNT 5
 #define COLUMN_COUNT 5
-int horizontalBorders[COLUMN_COUNT][2];
-int verticalBorders[ROW_COUNT][2];
-RECT clientSize;
 
+RECT clientSize;
 PhrasesProvider* phrasesProvider = new PhrasesProvider(11, 11);
 auto phrases = phrasesProvider->phrases;
 TableDrawer* tableDrawer = new TableDrawer(ROW_COUNT, COLUMN_COUNT, phrases);
-
 void OnWmPaint(HWND hWnd);
-
-HWND htextbox;
 
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
@@ -89,8 +84,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance;
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, 1000, 600, nullptr, nullptr, hInstance, nullptr);
+	const auto hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, 1000, 600, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -105,7 +99,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	static HWND hWndLV = NULL;
+	static HWND hWndLv = nullptr;
 
 	switch (message)
 	{
@@ -117,18 +111,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	break;
 	case WM_PAINT:
+	{
 		OnWmPaint(hWnd);
-		break;
+	}
+	break;
 	case WM_SIZE:
+	{
 		GetClientRect(hWnd, &clientSize);
-		break;
-
+	}
+	break;
 	case WM_DESTROY:
+	{
 		free(phrasesProvider);
 		free(tableDrawer);
 		PostQuitMessage(0);
-		break;
-
+	}
+	break;
 	default:
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
@@ -137,7 +135,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 void OnWmPaint(HWND hWnd)
 {
 	PAINTSTRUCT ps;
-
 	const auto hDc = BeginPaint(hWnd, &ps);
 	const auto color = RGB(0, 0, 0);
 	const auto pen = CreatePen(PS_SOLID, 1, color);
